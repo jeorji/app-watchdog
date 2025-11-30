@@ -1,8 +1,9 @@
+---
 - name: Validate monitoring configuration
-  ansible.builtin.assert:
+  assert:
     that:
-      - (web_app_monitoring_watch_service | default('')) | length > 0
-      - (web_app_monitoring_check_url | default('')) | length > 0
+      - (web_app_monitoring_watch_service | length) > 0
+      - (web_app_monitoring_check_url | length) > 0
     fail_msg: >-
       Set web_app_monitoring_watch_service and web_app_monitoring_check_url before enabling monitoring.
 
@@ -32,7 +33,7 @@
   get_url:
     url: "{{ web_app_monitoring_repo_url }}/{{ web_app_monitoring_release_path }}"
     dest: "{{ web_app_monitoring_install_dir }}/monitor.sh"
-    mode: "0644"
+    mode: "0744"
 
 - name: Deploy monitoring env file
   template:
