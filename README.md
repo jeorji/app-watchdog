@@ -13,7 +13,7 @@
 
 - `app/` – golang веб-приложение
 - `monitor/` –  bash‑скрипт, для мониторинга веб-приложения
-- `deploy/ansible/` – инвентарь и роль `web-app`, которая ставит/удаляет приложение и мониторинг
+- `ansible/` – инвентарь и роль `web-app`, которая ставит/удаляет приложение и мониторинг
 
 <a id="web-app"></a>
 ## Веб‑приложение
@@ -38,15 +38,15 @@
 <a id="ansible"></a>
 ## Деплой Ansible
 
-Роль `deploy/ansible/roles/web-app` управляет установкой:
+Роль `ansible/roles/web-app` управляет установкой:
 
-1. Обновите `deploy/ansible/inventory/hosts.yml`, указав свои хосты.
-2. Настройте `deploy/ansible/inventory/group_vars/all.yml`. Основные параметры:
+1. Обновите `ansible/inventory/hosts.yml`, указав свои хосты.
+2. Настройте `ansible/inventory/group_vars/all.yml`. Основные параметры:
    - `web_app_*`, `web_app_monitoring_*`
 3. Запустите плейбук:
 
 ```bash
-cd deploy/ansible
+cd ansible
 ansible-playbook -i inventory/hosts.yml site.yml
 ```
 
