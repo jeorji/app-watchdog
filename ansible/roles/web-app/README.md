@@ -1,38 +1,52 @@
-Role Name
-=========
+# web-app Ansible Role
 
-A brief description of the role goes here.
+Разворачивает веб‑сервис `web-app` и watchdog (`monitor.sh`) из GitHub Releases, настраивает systemd‑юниты и .env файлы.
 
-Requirements
-------------
+## Role Variables
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+### Приложение
 
-Role Variables
---------------
+| Переменная | Описание | Значение по умолчанию |
+| ---------- | -------- | --------------------- |
+| `web_app_state` | Управление жизненным циклом (`present`/`absent`) | `absent` |
+| `web_app_release_version` | Тег релиза либо `latest` для последнего артефакта | `latest` |
+| `web_app_service_name` | Имя systemd‑юнита приложения | `web-app` |
+| `web_app_health_max_delay_ms` | Максимальная задержка ответа `/healthz` (мс) | `1000` |
+| `web_app_health_fail_rate` | Вероятность искусственной ошибки `/healthz` | `0.1` |
+| `web_app_listen_port` | HTTP‑порт приложения | `8080` |
+| `web_app_install_path` | Каталог, куда распаковывается архив | `/opt` |
+| `web_app_repo_url` | Базовый URL GitHub Releases | `https://github.com/jeorji/app-watchdog/releases` |
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+### Watchdog
 
-Dependencies
-------------
+| Переменная | Описание | Значение по умолчанию |
+| ---------- | -------- | --------------------- |
+| `web_app_monitoring_state` | Жизненный цикл watchdog (`present`/`absent`) | `absent` |
+| `web_app_monitoring_release_version` | Тег релиза `monitor.sh` либо `latest` | `latest` |
+| `web_app_monitoring_service_name` | Имя таймера/сервиса watchdog | `web-app-monitoring` |
+| `web_app_monitoring_watch_service` | Целевой systemd‑юнит, который перезапускает watchdog | **обязательно указать** |
+| `web_app_monitoring_check_url` | URL health‑чека для мониторинга | **обязательно указать** |
+| `web_app_monitoring_check_timeout` | Таймаут curl в секундах | `3` |
+| `web_app_monitoring_retry_count` | Количество повторов проверки | `3` |
+| `web_app_monitoring_retry_delay` | Пауза между попытками (секунды) | `1` |
+| `web_app_monitoring_timer_interval` | Интервал systemd‑таймера | `1min` |
+| `web_app_monitoring_install_path` | Каталог установки watchdog | `/opt` |
+| `web_app_monitoring_repo_url` | Источник релизов `monitor.sh` | `https://github.com/jeorji/app-watchdog/releases` |
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Handlers
 
-Example Playbook
-----------------
+- `reload systemd`
+- `restart web-app service`
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## Example Playbook
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+```yaml
+- hosts: app_servers
+  vars:
+    web_app_state: present
+    web_app_monitoring_state: present
+    web_app_monitoring_watch_service: web-app
+    web_app_monitoring_check_url: http://127.0.0.1:8080/healthz
+  roles:
+    - web-app
+```
