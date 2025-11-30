@@ -57,6 +57,11 @@ done
 
 log "ERROR: healthcheck failed $failures times, restarting service $SERVICE_NAME"
 
+if [[ "$DRY_RUN" == true ]]; then
+    log "INFO: dry-run enabled, skip restarting $SERVICE_NAME"
+    exit 1
+fi
+
 if systemctl restart "$SERVICE_NAME"; then
     log "INFO: service $SERVICE_NAME restarted successfully"
 else
