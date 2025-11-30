@@ -60,6 +60,15 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: Inject monitor release metadata
+        run: |
+          VERSION="${GITHUB_REF_NAME#refs/tags/}"
+          COMMIT="${GITHUB_SHA}"
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          sed -i "s/^RELEASE_VERSION=.*/RELEASE_VERSION=\"${VERSION}\"/" monitor/monitor.sh
+          sed -i "s/^RELEASE_COMMIT=.*/RELEASE_COMMIT=\"${COMMIT}\"/" monitor/monitor.sh
+          sed -i "s/^RELEASE_DATE=.*/RELEASE_DATE=\"${DATE}\"/" monitor/monitor.sh
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
