@@ -1,0 +1,14 @@
+[Unit]
+Description={{ web_app_service_name }} service, Ansible managed
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ web_app_install_dir }}
+ExecStart={{ web_app_install_dir }}/web-app
+EnvironmentFile={{ web_app_install_dir }}/.env
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

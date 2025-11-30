@@ -1,0 +1,33 @@
+---
+- name: Set monitoring removal facts
+  set_fact:
+    web_app_monitoring_install_dir: "{{ web_app_monitoring_install_path }}/{{ web_app_monitoring_service_name }}"
+    web_app_monitoring_service_unit: "/etc/systemd/system/{{ web_app_monitoring_service_name }}.service"
+    web_app_monitoring_timer_unit: "/etc/systemd/system/{{ web_app_monitoring_service_name }}.timer"
+
+- name: Stop and disable monitoring timer
+  systemd:
+    name: "{{ web_app_monitoring_service_name }}.timer"
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Stop monitoring service
+  systemd:
+    name: "{{ web_app_monitoring_service_name }}.service"
+    state: stopped
+  ignore_errors: true
+
+- name: Remove monitoring systemd units
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ web_app_monitoring_service_unit }}"
+    - "{{ web_app_monitoring_timer_unit }}"
+  notify: reload systemd
+
+- name: Remove monitoring installation directory
+  file:
+    path: "{{ web_app_monitoring_install_dir }}"
+    state: absent

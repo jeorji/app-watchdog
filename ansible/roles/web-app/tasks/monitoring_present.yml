@@ -1,0 +1,62 @@
+- name: Validate monitoring configuration
+  ansible.builtin.assert:
+    that:
+      - (web_app_monitoring_watch_service | default('')) | length > 0
+      - (web_app_monitoring_check_url | default('')) | length > 0
+    fail_msg: >-
+      Set web_app_monitoring_watch_service and web_app_monitoring_check_url before enabling monitoring.
+
+- name: Set base monitoring facts (OS/ARCH)
+  set_fact:
+    web_app_monitoring_os: "{{ ansible_system | lower }}"
+    web_app_monitoring_arch: >-
+      {{ 'amd64' if ansible_architecture in ['x86_64', 'amd64']
+         else 'arm64' if ansible_architecture in ['aarch64', 'arm64']
+         else ansible_architecture }}
+    web_app_monitoring_install_dir: "{{ web_app_monitoring_install_path }}/{{ web_app_monitoring_service_name }}"
+
+- name: Set monitoring release path
+  set_fact:
+    web_app_monitoring_release_path: >-
+      {{ 'latest/download/' ~ 'monitor.sh'
+         if (web_app_monitoring_release_version | default('latest')) == 'latest'
+         else 'download/' ~ web_app_monitoring_release_version ~ '/' ~ 'monitor.sh' }}
+
+- name: Ensure monitoring directory exists
+  file:
+    path: "{{ web_app_monitoring_install_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Download monitoring script
+  get_url:
+    url: "{{ web_app_monitoring_repo_url }}/{{ web_app_monitoring_release_path }}"
+    dest: "{{ web_app_monitoring_install_dir }}/monitor.sh"
+    mode: "0644"
+
+- name: Deploy monitoring env file
+  template:
+    src: monitor.env.j2
+    dest: "{{ web_app_monitoring_install_dir }}/.env"
+    mode: "0640"
+
+- name: Install monitoring service unit
+  template:
+    src: monitor.service.j2
+    dest: "/etc/systemd/system/{{ web_app_monitoring_service_name }}.service"
+  notify: reload systemd
+
+- name: Install monitoring timer unit
+  template:
+    src: monitor.timer.j2
+    dest: "/etc/systemd/system/{{ web_app_monitoring_service_name }}.timer"
+  notify: reload systemd
+
+- name: Enable and start monitoring timer
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - "{{ web_app_monitoring_service_name }}.timer"
+    - "{{ web_app_monitoring_service_name }}.service"

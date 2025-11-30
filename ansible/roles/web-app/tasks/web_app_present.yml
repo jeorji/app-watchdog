@@ -1,0 +1,56 @@
+---
+- name: Set base web_app facts (OS/ARCH)
+  set_fact:
+    web_app_os: "{{ ansible_system | lower }}"
+    web_app_arch: >-
+      {{ 'amd64' if ansible_architecture in ['x86_64', 'amd64']
+         else 'arm64' if ansible_architecture in ['aarch64', 'arm64']
+         else ansible_architecture }}
+    web_app_install_dir: "{{ web_app_install_path }}/{{ web_app_service_name }}"
+
+- name: Set web_app archive name
+  set_fact:
+    web_app_archive_name: "app-{{ web_app_os }}-{{ web_app_arch }}.tar.gz"
+
+- name: Set web_app release path
+  set_fact:
+    web_app_release_path: >-
+      {{ 'latest/download/' ~ web_app_archive_name
+         if (web_app_release_version | default('latest')) == 'latest'
+         else 'download/' ~ web_app_release_version ~ '/' ~ web_app_archive_name }}
+
+- name: Create app directory
+  file:
+    path: "{{ web_app_install_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Download app archive
+  get_url:
+    url: "{{ web_app_repo_url }}/{{ web_app_release_path }}"
+    dest: "{{ web_app_install_dir }}/app.tar.gz"
+    mode: "0644"
+
+- name: Extract app archive
+  unarchive:
+    src: "{{ web_app_install_dir }}/app.tar.gz"
+    dest: "{{ web_app_install_dir }}/"
+    remote_src: true
+
+- name: Deploy .env file
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: "{{ web_app_install_dir }}/.env"
+  notify: restart web-app service
+
+- name: Install systemd unit
+  template:
+    src: app.service.j2
+    dest: "/etc/systemd/system/{{ web_app_service_name }}.service"
+  notify: reload systemd
+
+- name: Enable and start service
+  systemd:
+    name: "{{ web_app_service_name }}.service"
+    enabled: true
+    state: started

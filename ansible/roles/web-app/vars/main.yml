@@ -1,0 +1,8 @@
+---
+# web_app_
+web_app_install_path: /opt
+web_app_repo_url: https://github.com/jeorji/app-watchdog/releases
+
+# web_app_monitoring_
+web_app_monitoring_install_path: /opt
+web_app_monitoring_repo_url: https://github.com/jeorji/app-watchdog/releases

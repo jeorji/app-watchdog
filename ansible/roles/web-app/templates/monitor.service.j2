@@ -1,0 +1,10 @@
+[Unit]
+Description={{ web_app_monitoring_service_name }} watchdog, Ansible managed
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory={{ web_app_monitoring_install_dir }}
+EnvironmentFile={{ web_app_monitoring_install_dir }}/.env
+ExecStart={{ web_app_monitoring_install_dir }}/monitor.sh

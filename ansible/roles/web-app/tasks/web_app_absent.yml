@@ -1,0 +1,23 @@
+---
+- name: Set web_app removal facts
+  set_fact:
+    web_app_install_dir: "{{ web_app_install_path }}/{{ web_app_service_name }}"
+    web_app_service_unit: "/etc/systemd/system/{{ web_app_service_name }}.service"
+
+- name: Stop and disable web_app service
+  systemd:
+    name: "{{ web_app_service_name }}.service"
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: Remove web_app systemd unit
+  file:
+    path: "{{ web_app_service_unit }}"
+    state: absent
+  notify: reload systemd
+
+- name: Remove web_app installation directory
+  file:
+    path: "{{ web_app_install_dir }}"
+    state: absent

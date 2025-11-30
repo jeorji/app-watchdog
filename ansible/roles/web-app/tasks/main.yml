@@ -1,0 +1,14 @@
+---
+- name: Validate requested component states
+  assert:
+    that:
+      - web_app_state in ['present', 'absent']
+      - web_app_monitoring_state in ['present', 'absent']
+
+- name: Apply web application state
+  include_tasks: "web_app_{{ web_app_state }}.yml"
+  when: web_app_state is defined
+
+- name: Apply monitoring stack state
+  include_tasks: "monitoring_{{ web_app_monitoring_state }}.yml"
+  when: web_app_monitoring_state is defined

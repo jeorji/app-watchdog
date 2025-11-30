@@ -1,0 +1,11 @@
+[Unit]
+Description={{ web_app_monitoring_service_name }} watchdog timer, Ansible managed
+
+[Timer]
+Unit={{ web_app_monitoring_service_name }}.service
+OnUnitActiveSec={{ web_app_monitoring_timer_interval }}
+AccuracySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,19 @@
+---
+# web_app_
+web_app_state: absent
+web_app_release_version: latest
+web_app_service_name: web-app
+web_app_health_max_delay_ms: 1000
+web_app_health_fail_rate: 0.1
+web_app_listen_port: 8080
+
+# web_app_monitoring_
+web_app_monitoring_state: absent
+web_app_monitoring_release_version: latest
+web_app_monitoring_service_name: web-app-monitoring
+web_app_monitoring_watch_service: ""
+web_app_monitoring_check_url: ""
+web_app_monitoring_check_timeout: 3
+web_app_monitoring_retry_count: 3
+web_app_monitoring_retry_delay: 1
+web_app_monitoring_timer_interval: 1min

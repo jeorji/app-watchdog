@@ -1,0 +1,12 @@
+---
+# web_app_
+web_app_state: present
+web_app_release_version: latest
+web_app_listen_port: 8888
+web_app_health_fail_rate: 0.5
+
+# web_app_monitoring_
+web_app_monitoring_state: absent
+web_app_release_version: latest
+web_app_monitoring_watch_service: "{{ web_app_service_name }}.service"
+web_app_monitoring_check_url: "http://127.0.0.1:{{ web_app_listen_port }}/healthz"
