@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Build and package
+        working-directory: app
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          COMMIT=${GITHUB_SHA}
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          TARGET="app-${GOOS}-${GOARCH}"
+          OUTDIR="../dist/${TARGET}"
+          mkdir -p "${OUTDIR}"
+          go build \
+            -ldflags "-s -w -X 'main.ReleaseVersion=${VERSION}' -X 'main.ReleaseCommit=${COMMIT}' -X 'main.ReleaseDate=${DATE}'" \
+            -o "${OUTDIR}/web-app" .
+          (cd "${OUTDIR}" && tar -czf "../${TARGET}.tar.gz" web-app)
+          rm -rf "${OUTDIR}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ matrix.goos }}-${{ matrix.goarch }}"
+          path: dist/app-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-22.04
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Add monitor script
+        run: |
+          mkdir -p dist
+          cp monitor/monitor.sh dist/monitor.sh
+          chmod +x dist/monitor.sh
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum *.tar.gz monitor.sh > checksums.txt
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/monitor.sh
+            dist/checksums.txt
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
