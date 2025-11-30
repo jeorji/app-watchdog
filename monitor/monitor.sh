@@ -2,6 +2,15 @@
 
 set -euo pipefail
 
+RELEASE_VERSION="dev"
+RELEASE_COMMIT="none"
+RELEASE_DATE="unknown"
+
+if [[ "${1:-}" == "--version" ]]; then
+    echo "build: ${RELEASE_VERSION} (commit ${RELEASE_COMMIT}, built ${RELEASE_DATE})"
+    exit 0
+fi
+
 # Defaults
 CHECK_TIMEOUT="${CHECK_TIMEOUT:-3}"
 CHECK_HTTP_CODE="${CHECK_HTTP_CODE:-200}"
